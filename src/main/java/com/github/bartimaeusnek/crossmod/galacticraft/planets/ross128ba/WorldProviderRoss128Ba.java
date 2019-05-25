@@ -23,6 +23,7 @@
 package com.github.bartimaeusnek.crossmod.galacticraft.planets.ross128ba;
 
 import com.github.bartimaeusnek.crossmod.galacticraft.planets.AbstractWorldProviderSpace;
+import com.github.bartimaeusnek.crossmod.galacticraft.planets.caelbriG.CaebriGChunkProvider;
 import com.github.bartimaeusnek.crossmod.galacticraft.solarsystems.Ross128SolarSystem;
 import micdoodle8.mods.galacticraft.api.galaxies.CelestialBody;
 import micdoodle8.mods.galacticraft.api.vector.Vector3;
@@ -52,7 +53,7 @@ public class WorldProviderRoss128Ba extends AbstractWorldProviderSpace {
 
     @Override
     public Class<? extends IChunkProvider> getChunkProviderClass() {
-        return ChunkProviderRoss128ba.class;
+        return CaebriGChunkProvider.class;
     }
 
     @Override

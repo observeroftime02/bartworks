@@ -153,7 +153,7 @@ public abstract class BW_OreLayer extends GT_Worldgen {
         return setGTOreBlockSpace(aWorld, aX, aY, aZ, aMetaData, getDefaultBlockToReplace());
     }
 
-    public boolean setGTOreBlockSpace(World aWorld, int aX, int aY, int aZ, int aMetaData, Block block){
+    public static boolean setGTOreBlockSpace(World aWorld, int aX, int aY, int aZ, int aMetaData, Block block){
         if (!GT_TileEntity_Ores.setOreBlock(aWorld, aX, aY, aZ, aMetaData, false, false)) {
             aY = Math.min(aWorld.getActualHeight(), Math.max(aY, 1));
             Block tBlock = aWorld.getBlock(aX, aY, aZ);

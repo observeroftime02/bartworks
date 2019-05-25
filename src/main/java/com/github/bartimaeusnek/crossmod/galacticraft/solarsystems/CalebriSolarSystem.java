@@ -20,36 +20,28 @@
  * SOFTWARE.
  */
 
-package com.github.bartimaeusnek.bartworks.util;
+package com.github.bartimaeusnek.crossmod.galacticraft.solarsystems;
 
-import codechicken.nei.api.API;
-import codechicken.nei.api.IConfigureNEI;
-import com.github.bartimaeusnek.bartworks.MainMod;
-import com.github.bartimaeusnek.bartworks.common.loaders.FluidLoader;
-import com.github.bartimaeusnek.bartworks.common.loaders.ItemRegistry;
-import cpw.mods.fml.common.Optional;
-import net.minecraft.item.ItemStack;
+import micdoodle8.mods.galacticraft.api.galaxies.CelestialBody;
+import micdoodle8.mods.galacticraft.api.galaxies.Planet;
+import micdoodle8.mods.galacticraft.api.galaxies.SolarSystem;
+import micdoodle8.mods.galacticraft.api.galaxies.Star;
+import micdoodle8.mods.galacticraft.api.vector.Vector3;
 
-@Optional.Interface(iface = "codechicken.nei.api.API", modid = "NotEnoughItems")
-public class NEIbartworksConfig implements IConfigureNEI {
+public class CalebriSolarSystem {
 
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public String getName() {
-        return MainMod.NAME;
-    }
+    public static SolarSystem CalebriSolarSystem;
+    public static Star CalebriA;
+    public static Planet[] CalebriX;
 
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public String getVersion() {
-        return MainMod.VERSION;
-    }
+    static {
+        CalebriSolarSystem = new SolarSystem("CalebriSolarSystem", "milkyWay").setMapPosition(new Vector3(1.0D, -0.5D, -1.0D));
+        CalebriA = (Star) new Star("CalebriA").setParentSolarSystem(CalebriSolarSystem).setTierRequired(-1);
+        CalebriSolarSystem.setMainStar(CalebriA);
+        CalebriX = new Planet[13];
+        for (int i = 0; i < 13; i++) {
+            CalebriX[i] = (Planet) new Planet("Calebri"+i).setRelativeDistanceFromCenter(new CelestialBody.ScalableDistance(i*0.25F+0.25f, i*0.25F+0.25f));
+        }
 
-    @Optional.Method(modid = "NotEnoughItems")
-    @Override
-    public void loadConfig() {
-        API.hideItem(new ItemStack(ItemRegistry.TAB));
-        API.hideItem(new ItemStack(FluidLoader.bioFluidBlock));
-        API.hideItem(new ItemStack(ItemRegistry.bw_fake_glasses));
-    }
+    };
 }

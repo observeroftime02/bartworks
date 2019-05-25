@@ -23,6 +23,7 @@
 package com.github.bartimaeusnek.crossmod.galacticraft;
 
 import com.github.bartimaeusnek.bartworks.common.configs.ConfigHandler;
+import com.github.bartimaeusnek.crossmod.galacticraft.solarsystems.CalebriSolarSystem;
 import com.github.bartimaeusnek.crossmod.galacticraft.solarsystems.Ross128SolarSystem;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -96,6 +97,7 @@ public class GalacticraftProxy {
     private static void commonInit(FMLInitializationEvent e) {
         if (ConfigHandler.Ross128Enabled)
             Ross128SolarSystem.init();
+        new CalebriSolarSystem();
     }
     private static void serverPostInit(FMLPostInitializationEvent e) {
 
