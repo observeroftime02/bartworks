@@ -151,7 +151,7 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
             this.mOutputFluids = new FluidStack[]{FluidRegistry.getFluidStack("ic2hotcoolant",0)};
 
         this.mEUt=0;
-        this.mMaxProgresstime=648000;
+        this.mMaxProgresstime=1200;
 
         return true;
     }
