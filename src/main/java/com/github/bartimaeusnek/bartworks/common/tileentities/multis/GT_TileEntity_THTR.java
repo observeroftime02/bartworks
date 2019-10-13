@@ -296,7 +296,7 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
                 "BISO-Pebbles:", this.BISOPeletSupply + "pcs.",
                 "TRISO-Pebbles:", this.TRISOPeletSupply + "pcs.",
                 "Helium-Level:", this.HeliumSupply+"L / "+ GT_TileEntity_THTR.HELIUM_NEEDED +"L",
-                "Coolant/t:", this.BISOPeletSupply+this.TRISOPeletSupply >= 100000 ? (long) ((0.03471*(float)this.TRISOPeletSupply + 0.0267*(float)this.BISOPeletSupply))+"L/t" : "0L/t",
+                "Coolant/t:", this.BISOPeletSupply+this.TRISOPeletSupply >= 100000 ? (long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply))+"L/t" : "0L/t",
                 "Problems:", String.valueOf(this.getIdealStatus() - this.getRepairStatus())
         };
     }
