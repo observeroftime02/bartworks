@@ -86,6 +86,7 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         this.BISOPeletSupply =aNBT.getInteger("BISOPeletSupply");
         this.TRISOPeletSupply =aNBT.getInteger("TRISOPeletSupply");
         this.empty =aNBT.getBoolean("EmptyMode");
+        this.cyclescompleted =aNBT.getInteger("cyclescompleted");
     }
 
     @Override
@@ -95,6 +96,7 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         aNBT.setInteger("BISOPeletSupply", this.BISOPeletSupply);
         aNBT.setInteger("TRISOPeletSupply", this.TRISOPeletSupply);
         aNBT.setBoolean("EmptyMode", this.empty);
+        aNBT.setInteger("cyclescompleted", this.cyclescompleted);
     }
 
     @Override
@@ -332,7 +334,8 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
                 "TRISO-Pebbles:", this.TRISOPeletSupply + "pcs.",
                 "Helium-Level:", this.HeliumSupply+"L / "+ GT_TileEntity_THTR.HELIUM_NEEDED +"L",
                 "Coolant/t:", this.BISOPeletSupply+this.TRISOPeletSupply >= 100000 ? (long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply))+"L/t" : "0L/t",
-                "Problems:", String.valueOf(this.getIdealStatus() - this.getRepairStatus())
+                "Problems:", String.valueOf(this.getIdealStatus() - this.getRepairStatus()),
+                "Cycles completed:", this.cyclescompleted + " out of 108 cycles"
         };
     }
 
