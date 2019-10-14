@@ -35,9 +35,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class DebugLog {
+    private static Logger utilLog;
     private static boolean init;
     static FileHandler fh;
-    private static Logger utilLog;
     public DebugLog(FMLPreInitializationEvent event) throws IOException {
         if (DebugLog.init)
             return;

@@ -48,6 +48,7 @@ import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import eu.usrv.yamcore.auxiliary.LogHelper;
 
 import java.util.Arrays;
 
@@ -59,6 +60,11 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
     private int BISOPeletSupply;
     private int TRISOPeletSupply;
     private boolean empty;
+    public int cyclescompleted;
+    public int reduceBISO;
+    public int reduceTRISO;
+    public static LogHelper Logger = new LogHelper("bartworks");
+
 
     public GT_TileEntity_THTR(int aID, String aName, String aNameRegional) {
         super(aID, aName, aNameRegional);
@@ -128,30 +134,58 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         }
     }
 
+
+
+
     @Override
     public boolean checkRecipe(ItemStack controllerStack) {
+
 
         if (!(this.HeliumSupply >= GT_TileEntity_THTR.HELIUM_NEEDED && this.BISOPeletSupply + this.TRISOPeletSupply >= 100000))
             return false;
 
-        if (new XSTR().nextBoolean()) {
-            if (this.BISOPeletSupply > 0)
-                --this.BISOPeletSupply;
-            else
-                --this.TRISOPeletSupply;
-        } else {
-            if (this.TRISOPeletSupply > 0)
-                --this.TRISOPeletSupply;
-            else
-                --this.BISOPeletSupply;
+        if (cyclescompleted >= 107) {
+            Logger.info("108 Cycles have elapsed, now we reduce the fuel pellets by either 0.5% or 1, depending on RNG  ...");
+            Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+            if (new XSTR().nextBoolean()) {
+                Logger.info("Triggered % reduction, we will now first reduce BISO pellets by 0.5%, and if none are found, reduce TRISO Pellets instead");
+                if (this.BISOPeletSupply > 0) {
+                    if (this.BISOPeletSupply < 1000){
+                        Logger.info("BISO Pellet supply below reduction threshold, setting BISO pellet supply to zero...");
+                        this.BISOPeletSupply = 0;
+                    } else {
+                        reduceBISO = (this.BISOPeletSupply / 1000) * 5;
+                        this.BISOPeletSupply -= reduceBISO;
+                        Logger.info("Reduced BISO Pellet Supply by " + reduceBISO + " pellets");
+                    }
+                } else {
+                    reduceTRISO = (this.TRISOPeletSupply / 1000) * 5;
+                    this.TRISOPeletSupply -= reduceTRISO;
+                    Logger.info("No BISO pellets found, reduced TRISO Pellet Supply by " + reduceTRISO + " pellets instead");
+                }
+            }
+            else {
+                Logger.info("Did not trigger % reduction, reducing pellet supply by one instead...");
+                if (this.TRISOPeletSupply > 0) {
+                    --this.TRISOPeletSupply;
+                    Logger.info("BISO pellet found, reducing BISO pellet count by one...");
+                } else {
+                    --this.BISOPeletSupply;
+                    Logger.info(" No BISO pellets found, reducing TRISO cound by one pellet instead...");
+                }
+            }
+            Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
+            cyclescompleted = 0;
         }
 
         this.updateSlots();
-        if (this.mOutputFluids == null || this.mOutputFluids[0] == null)
+        // if (this.mOutputFluids == null || this.mOutputFluids[0] == null)
             this.mOutputFluids = new FluidStack[]{FluidRegistry.getFluidStack("ic2hotcoolant",0)};
 
         this.mEUt=0;
-        this.mMaxProgresstime=1200;
+        this.mMaxProgresstime=6000;
+        cyclescompleted++;
+        Logger.warn("Starting cycle number " + cyclescompleted);
 
         return true;
     }
@@ -206,6 +240,7 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
                 }
             }
         }
+        Logger.info("Cycle number " + cyclescompleted + " produced " + toProduce + "L of hot coolant...");
         this.mOutputFluids[0].amount+=toProduce;
         return true;
     }
