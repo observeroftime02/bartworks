@@ -185,7 +185,8 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         this.mEUt=0;
         this.mMaxProgresstime=6000;
         cyclescompleted++;
-        Logger.warn("Starting cycle number " + cyclescompleted);
+        Logger.info("Cycle number " + cyclescompleted + " produced " + (((long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply))) * 6000) + "L of hot Coolant..."   );
+        Logger.info("Starting cycle number " + cyclescompleted + "...");
 
         return true;
     }
@@ -240,7 +241,6 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
                 }
             }
         }
-        Logger.info("Cycle number " + cyclescompleted + " produced " + toProduce + "L of hot coolant...");
         this.mOutputFluids[0].amount+=toProduce;
         return true;
     }
