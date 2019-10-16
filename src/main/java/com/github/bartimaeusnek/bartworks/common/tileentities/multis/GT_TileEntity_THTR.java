@@ -48,6 +48,7 @@ import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import eu.usrv.yamcore.auxiliary.LogHelper;
 
 import java.util.Arrays;
 
@@ -56,15 +57,20 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
     private static final int BASECASINGINDEX = 44;
     private static final int HELIUM_NEEDED = 730000;
     private int HeliumSupply;
-    private int BISOPeletSupply, savedBISO;
-    private int TRISOPeletSupply, savedTRISO;
+    private int BISOPeletSupply;
+    private int TRISOPeletSupply;
     private boolean empty;
+    public int cyclescompleted;
+    public int reduceBISO;
+    public int reduceTRISO;
+    public static LogHelper Logger = new LogHelper("bartworks");
+
 
     public GT_TileEntity_THTR(int aID, String aName, String aNameRegional) {
         super(aID, aName, aNameRegional);
     }
 
-    private GT_TileEntity_THTR(String aName) {
+    public GT_TileEntity_THTR(String aName) {
         super(aName);
     }
 
@@ -76,12 +82,11 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
     @Override
     public void loadNBTData(NBTTagCompound aNBT) {
         super.loadNBTData(aNBT);
-        this.HeliumSupply = aNBT.getInteger("HeliumSupply");
-        this.BISOPeletSupply = aNBT.getInteger("BISOPeletSupply");
-        this.TRISOPeletSupply = aNBT.getInteger("TRISOPeletSupply");
-        this.savedBISO = aNBT.getInteger("savedBISO");
-        this.savedTRISO = aNBT.getInteger("savedTRISO");
-        this.empty = aNBT.getBoolean("EmptyMode");
+        this.HeliumSupply =aNBT.getInteger("HeliumSupply");
+        this.BISOPeletSupply =aNBT.getInteger("BISOPeletSupply");
+        this.TRISOPeletSupply =aNBT.getInteger("TRISOPeletSupply");
+        this.empty =aNBT.getBoolean("EmptyMode");
+        this.cyclescompleted =aNBT.getInteger("cyclescompleted");
     }
 
     @Override
@@ -90,9 +95,8 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         aNBT.setInteger("HeliumSupply", this.HeliumSupply);
         aNBT.setInteger("BISOPeletSupply", this.BISOPeletSupply);
         aNBT.setInteger("TRISOPeletSupply", this.TRISOPeletSupply);
-        aNBT.setInteger("savedBISO", this.savedBISO);
-        aNBT.setInteger("savedTRISO", this.savedTRISO);
         aNBT.setBoolean("EmptyMode", this.empty);
+        aNBT.setInteger("cyclescompleted", this.cyclescompleted);
     }
 
     @Override
@@ -132,36 +136,77 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         }
     }
 
+
+
+
     @Override
     public boolean checkRecipe(ItemStack controllerStack) {
+
 
         if (!(this.HeliumSupply >= GT_TileEntity_THTR.HELIUM_NEEDED && this.BISOPeletSupply + this.TRISOPeletSupply >= 100000))
             return false;
 
-        int toReduce = new XSTR().nextInt((int)Math.floor(((double)this.BISOPeletSupply + (double)this.TRISOPeletSupply) / 200D));
 
-        this.savedBISO = BISOPeletSupply;
-        this.savedTRISO = TRISOPeletSupply;
+        if (cyclescompleted == 107) {
+            if (new XSTR().nextBoolean()) {
+                if (this.BISOPeletSupply > 0) {
+                    BISOreduction();
+                } else {
+                    TRISOreduction();
+                }
+            } else {
+                if (this.TRISOPeletSupply > 0) {
+                    --this.TRISOPeletSupply;
+                    cyclescompleted = 0;
+                } else {
+                    --this.BISOPeletSupply;
+                    cyclescompleted = 0;
 
-        if (new XSTR().nextBoolean()) {
-            if (this.BISOPeletSupply > 0)
-                this.BISOPeletSupply -= toReduce;
-            else
-                this.TRISOPeletSupply -= toReduce;
-        } else {
-            if (this.TRISOPeletSupply > 0)
-                this.TRISOPeletSupply -= toReduce;
-            else
-                this.BISOPeletSupply -= toReduce;
+                }
+            }
         }
 
         this.updateSlots();
-
+        // if (this.mOutputFluids == null || this.mOutputFluids[0] == null)
         this.mOutputFluids = new FluidStack[]{FluidRegistry.getFluidStack("ic2hotcoolant",0)};
 
         this.mEUt=0;
-        this.mMaxProgresstime=648000;
+        this.mMaxProgresstime=6000;
+        cyclescompleted++;
+        Logger.info("Cycle number " + cyclescompleted + " produced " + (((long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply))) * 6000) + "L of hot Coolant..."   );
+        Logger.info("Starting cycle number " + cyclescompleted + "...");
+
         return true;
+    }
+
+    private void BISOreduction(){
+        if (new XSTR().nextBoolean()){
+            Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+            reduceBISO = (this.BISOPeletSupply / 1000) * 5;
+            this.BISOPeletSupply -= reduceBISO;
+            Logger.info("Reduced BISO Pellet Supply by " + reduceBISO + " pellets");
+            Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
+            cyclescompleted = 0;
+        } else {
+            BISOPeletSupply--;
+            Logger.info("Hit RNG toss, reduced by one pellet only");
+            cyclescompleted = 0;
+        }
+    }
+
+    private void TRISOreduction(){
+        if (new XSTR().nextBoolean()) {
+            Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+            reduceTRISO = (this.TRISOPeletSupply / 1000) * 5;
+            this.TRISOPeletSupply -= reduceTRISO;
+            Logger.info("No BISO pellets found, reduced TRISO Pellet Supply by " + reduceTRISO + " pellets instead");
+            Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
+            cyclescompleted = 0;
+        } else {
+            TRISOPeletSupply--;
+            Logger.info("Hit RNG toss, reduced by one pellet only");
+            cyclescompleted = 0;
+        }
     }
 
     @Override
@@ -174,33 +219,47 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
             this.HeliumSupply = 0;
             this.TRISOPeletSupply = 0;
             this.BISOPeletSupply = 0;
-            this.savedTRISO = 0;
-            this.savedBISO = 0;
             return true;
         }
 
         long accessibleCoolant = 0;
+        long toProduce=0;
         for (FluidStack fluidStack : this.getStoredFluids()) {
             if (fluidStack.isFluidEqual(FluidRegistry.getFluidStack("ic2coolant",1))) {
-                accessibleCoolant += fluidStack.amount;
+                accessibleCoolant+=fluidStack.amount;
             }
         }
-        
-        accessibleCoolant = Math.min((long) ((0.00711111111111111111111111111111D*(double)this.savedTRISO + 0.00474074074074074074074074074074D*(double)this.savedBISO)), accessibleCoolant);
+
+        toProduce = (long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply));
+
+        if (toProduce > accessibleCoolant) {
+//            new ExplosionIC2(
+//                    this.getBaseMetaTileEntity().getWorld(),
+//                    null,
+//                    this.getBaseMetaTileEntity().getXCoord(),
+//                    this.getBaseMetaTileEntity().getYCoord(),
+//                    this.getBaseMetaTileEntity().getZCoord(),
+//                    50f,
+//                    0.01f,
+//                    ExplosionIC2.Type.Nuclear
+//                    ).doExplosion();
+            toProduce=accessibleCoolant;
+        }
+
+        accessibleCoolant=toProduce;
 
         for (FluidStack fluidStack : this.getStoredFluids()) {
             if (fluidStack.isFluidEqual(FluidRegistry.getFluidStack("ic2coolant",1))) {
                 if (accessibleCoolant >= fluidStack.amount) {
                     accessibleCoolant -= fluidStack.amount;
-                    fluidStack.amount = 0;
+                    fluidStack.amount=0;
                 } else if (accessibleCoolant > 0) {
-                    fluidStack.amount -= accessibleCoolant;
-                    accessibleCoolant = 0;
+                    fluidStack.amount-=accessibleCoolant;
+                    accessibleCoolant=0;
                 }
             }
         }
-        this.mOutputFluids[0].amount += accessibleCoolant;
-        this.updateSlots();
+        this.mOutputFluids[0].amount+=toProduce;
         return true;
     }
 
@@ -210,45 +269,45 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         int xDir = ForgeDirection.getOrientation(aBaseMetaTileEntity.getBackFacing()).offsetX * xz;
         int zDir = ForgeDirection.getOrientation(aBaseMetaTileEntity.getBackFacing()).offsetZ * xz;
         for (int x = -xz; x <= xz; x++) {
-                for (int z = -xz; z <= xz; z++) {
-                    for (int y = 0; y < 12; y++) {
-                        if (y == 0 || y == 11) {
-                            if (
-                                    !((Math.abs(z) == xz-1 && Math.abs(x) == xz)) &&
-                                    !((Math.abs(z) == xz && Math.abs(x) == xz-1)) &&
-                                    !((Math.abs(x) == Math.abs(z) && Math.abs(x) == xz))
-                            ) {
-                                if (x + xDir == 0 && y == 0 && z + zDir == 0)
-                                    continue;
-                                if (!(aBaseMetaTileEntity.getBlockOffset(xDir + x, y, zDir + z) == GregTech_API.sBlockCasings3 && aBaseMetaTileEntity.getMetaIDOffset(xDir + x, y, zDir + z) == 12)) {
-                                    if (
-                                            (
-                                                    !(this.addInputToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX) && y == 11) &&
-                                                    !(this.addOutputToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX) && y == 0)) &&
-                                                    !this.addMaintenanceToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX)
-                                    ) {
-                                        return false;
-                                    }
+            for (int z = -xz; z <= xz; z++) {
+                for (int y = 0; y < 12; y++) {
+                    if (y == 0 || y == 11) {
+                        if (
+                                !((Math.abs(z) == xz-1 && Math.abs(x) == xz)) &&
+                                        !((Math.abs(z) == xz && Math.abs(x) == xz-1)) &&
+                                        !((Math.abs(x) == Math.abs(z) && Math.abs(x) == xz))
+                        ) {
+                            if (x + xDir == 0 && y == 0 && z + zDir == 0)
+                                continue;
+                            if (!(aBaseMetaTileEntity.getBlockOffset(xDir + x, y, zDir + z) == GregTech_API.sBlockCasings3 && aBaseMetaTileEntity.getMetaIDOffset(xDir + x, y, zDir + z) == 12)) {
+                                if (
+                                        (
+                                                !(this.addInputToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX) && y == 11) &&
+                                                        !(this.addOutputToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX) && y == 0)) &&
+                                                !this.addMaintenanceToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX)
+                                ) {
+                                    return false;
                                 }
                             }
                         }
+                    }
 
 
 //                        else if (!((Math.abs(x) == 4 && Math.abs(z) == 4) || (Math.abs(x) == 3 && Math.abs(z) == 3)) && !(Math.abs(x) < 3 || Math.abs(z) < 3) && !((Math.abs(x) == Math.abs(z) && Math.abs(x) == 3) || Math.abs(x) == 4 || Math.abs(z) == 4)) {
-                        else if (!((Math.abs(z) == xz-1 && Math.abs(x) == xz)))
-                                        if (!((Math.abs(z) == xz && Math.abs(x) == xz-1)))
-                                            if (!((Math.abs(x) == Math.abs(z) && Math.abs(x) == xz)))
-                                                if (!(Math.abs(x) < xz && Math.abs(z) != xz))
+                    else if (!((Math.abs(z) == xz-1 && Math.abs(x) == xz)))
+                        if (!((Math.abs(z) == xz && Math.abs(x) == xz-1)))
+                            if (!((Math.abs(x) == Math.abs(z) && Math.abs(x) == xz)))
+                                if (!(Math.abs(x) < xz && Math.abs(z) != xz))
 
-                        {
-                            if (!(aBaseMetaTileEntity.getBlockOffset(xDir + x, y, zDir + z) == GregTech_API.sBlockCasings3 && aBaseMetaTileEntity.getMetaIDOffset(xDir + x, y, zDir + z) == 12)) {
-                            if (
-                                    !this.addMaintenanceToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX))
-                            {
-                                return false;
-                            }
-                        }
-                    }
+                                {
+                                    if (!(aBaseMetaTileEntity.getBlockOffset(xDir + x, y, zDir + z) == GregTech_API.sBlockCasings3 && aBaseMetaTileEntity.getMetaIDOffset(xDir + x, y, zDir + z) == 12)) {
+                                        if (
+                                                !this.addMaintenanceToMachineList(aBaseMetaTileEntity.getIGregTechTileEntityOffset(xDir + x, y, zDir + z), GT_TileEntity_THTR.BASECASINGINDEX))
+                                        {
+                                            return false;
+                                        }
+                                    }
+                                }
                 }
             }
 
@@ -290,8 +349,9 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
                 "BISO-Pebbles:", this.BISOPeletSupply + "pcs.",
                 "TRISO-Pebbles:", this.TRISOPeletSupply + "pcs.",
                 "Helium-Level:", this.HeliumSupply+"L / "+ GT_TileEntity_THTR.HELIUM_NEEDED +"L",
-                "Coolant/t:", this.savedBISO+this.savedTRISO >= 100000 ? (long) ((0.00711111111111111111111111111111D * (double) this.savedTRISO + 0.00474074074074074074074074074074D * (double) this.savedBISO))+"L/t" : "0L/t",
-                "Problems:", String.valueOf(this.getIdealStatus() - this.getRepairStatus())
+                "Coolant/t:", this.BISOPeletSupply+this.TRISOPeletSupply >= 100000 ? (long) ((0.00711111111111111111111111111111D*(double)this.TRISOPeletSupply + 0.00474074074074074074074074074074D*(double)this.BISOPeletSupply))+"L/t" : "0L/t",
+                "Problems:", String.valueOf(this.getIdealStatus() - this.getRepairStatus()),
+                "Cycles completed:", this.cyclescompleted + " out of 108 cycles"
         };
     }
 
@@ -325,8 +385,8 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
 
         public static void registerTHR_Recipes(){
             GT_Values.RA.addAssemblerRecipe(new ItemStack[]{
-                    GT_OreDictUnificator.get(OrePrefixes.plateDense,Materials.Lead,6),
-                    GT_OreDictUnificator.get(OrePrefixes.frameGt,Materials.TungstenSteel,1)
+                            GT_OreDictUnificator.get(OrePrefixes.plateDense,Materials.Lead,6),
+                            GT_OreDictUnificator.get(OrePrefixes.frameGt,Materials.TungstenSteel,1)
                     },
                     Materials.Concrete.getMolten(1296),
                     new ItemStack(GregTech_API.sBlockCasings3,1,12),
