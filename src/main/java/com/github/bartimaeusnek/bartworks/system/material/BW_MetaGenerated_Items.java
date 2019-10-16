@@ -23,10 +23,12 @@
 package com.github.bartimaeusnek.bartworks.system.material;
 
 import com.github.bartimaeusnek.bartworks.API.IRadMaterial;
+import com.github.bartimaeusnek.bartworks.client.textures.PrefixTextureLinker;
 import com.github.bartimaeusnek.bartworks.common.configs.ConfigHandler;
 import com.github.bartimaeusnek.bartworks.system.oredict.OreDictAdder;
 import com.github.bartimaeusnek.bartworks.util.ChatColorHelper;
 import com.github.bartimaeusnek.bartworks.util.Pair;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.enums.Materials;
@@ -69,6 +71,11 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
     protected final OrePrefixes orePrefixes;
     private final short aNumToGen = (short) werkstoffHashMap.size();
 
+    public BW_MetaGenerated_Items(OrePrefixes orePrefixes, Object unused){
+        super("bwMetaGeneratedGTEnhancement" + orePrefixes.name(), (short) 32766, (short) 0);
+        this.orePrefixes = orePrefixes;
+    }
+
     public BW_MetaGenerated_Items(OrePrefixes orePrefixes) {
         super("bwMetaGenerated" + orePrefixes.name(), (short) 32766, (short) 0);
         this.orePrefixes = orePrefixes;
@@ -76,9 +83,9 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
         for (int i = 0; i < this.aNumToGen; i++) {
             ItemStack tStack = new ItemStack(this, 1, i);
             Werkstoff w = werkstoffHashMap.get((short) i);
-            if (w == null || ((w.getGenerationFeatures().blacklist & orePrefixes.mMaterialGenerationBits) != 0) )
+            if (w == null || ((w.getGenerationFeatures().blacklist & Werkstoff.GenerationFeatures.prefixLogic.get(this.orePrefixes)) != 0) )
                 continue;
-            if ((w.getGenerationFeatures().toGenerate & orePrefixes.mMaterialGenerationBits) == 0 && orePrefixes.mMaterialGenerationBits != 0)
+            if ((w.getGenerationFeatures().toGenerate & Werkstoff.GenerationFeatures.prefixLogic.get(this.orePrefixes)) == 0 && Werkstoff.GenerationFeatures.prefixLogic.get(this.orePrefixes) != 0)
                 continue;
             GT_LanguageManager.addStringLocalization(this.getUnlocalizedName(tStack) + ".name", this.getDefaultLocalization(w));
             GT_LanguageManager.addStringLocalization(this.getUnlocalizedName(tStack) + ".tooltip", w.getToolTip());
@@ -131,6 +138,10 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
         }
         if (this.orePrefixes == OrePrefixes.crushed)
             aList.add(GT_LanguageManager.getTranslation("metaitem.01.tooltip.purify.2"));
+
+        if (aStack != null && aStack.getItem() instanceof BW_MetaGenerated_Items && aStack.getItemDamage() == WerkstoffLoader.Tiberium.getmID())
+            aList.add(GT_LanguageManager.getTranslation("metaitem.01.tooltip.nqgen"));
+
         aList.add(StatCollector.translateToLocal("tooltip.bw.0.name") + ChatColorHelper.DARKGREEN + " BartWorks");
     }
 
@@ -144,21 +155,31 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
     }
 
     @Override
-    public final IIconContainer getIconContainer(int aMetaData) {
-        return werkstoffHashMap.get((short) aMetaData) == null ? null : this.orePrefixes.mTextureIndex == -1 ? null : werkstoffHashMap.get((short) aMetaData).getTexSet().mTextures[this.orePrefixes.mTextureIndex];
+    public IIconContainer getIconContainer(int aMetaData) {
+        if (werkstoffHashMap.get((short) aMetaData) == null)
+            return null;
+        if (this.orePrefixes.mTextureIndex == -1)
+            return getIconContainerBartWorks(aMetaData);
+        return werkstoffHashMap.get((short) aMetaData).getTexSet().mTextures[this.orePrefixes.mTextureIndex];
+    }
+
+    protected IIconContainer getIconContainerBartWorks(int aMetaData) {
+        if (FMLCommonHandler.instance().getSide().isClient())
+            return PrefixTextureLinker.texMap.get(this.orePrefixes).get(werkstoffHashMap.get((short) aMetaData).getTexSet());
+        return null;
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public final void getSubItems(Item var1, CreativeTabs aCreativeTab, List aList) {
+    public void getSubItems(Item var1, CreativeTabs aCreativeTab, List aList) {
         for (int i = 0; i < this.aNumToGen; i++) {
             Werkstoff werkstoff = werkstoffHashMap.get((short) i);
-            if (werkstoff != null && ((werkstoff.getGenerationFeatures().toGenerate & this.orePrefixes.mMaterialGenerationBits) != 0) && ((werkstoff.getGenerationFeatures().blacklist & this.orePrefixes.mMaterialGenerationBits) == 0)) {
+            if (werkstoff != null && ((werkstoff.getGenerationFeatures().toGenerate & Werkstoff.GenerationFeatures.prefixLogic.get(this.orePrefixes)) != 0) && ((werkstoff.getGenerationFeatures().blacklist & Werkstoff.GenerationFeatures.prefixLogic.get(this.orePrefixes)) == 0)) {
                 ItemStack tStack = new ItemStack(this, 1, i);
                 aList.add(tStack);
             }
         }
-        super.getSubItems(var1, aCreativeTab, aList);
+        //super.getSubItems(var1, aCreativeTab, aList);
     }
 
     @Override
@@ -203,7 +224,7 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
 
     @Override
     public int getItemStackLimit(ItemStack aStack) {
-        return 64;
+        return this.orePrefixes.mDefaultStackSize;
     }
 
     @Override
@@ -231,6 +252,11 @@ public class BW_MetaGenerated_Items extends GT_MetaGenerated_Item implements IRa
 
     @Override
     public int getCapacity(ItemStack aStack) {
-        return this.orePrefixes == OrePrefixes.cell || this.orePrefixes == OrePrefixes.cellPlasma ? 1000 : this.orePrefixes == WerkstoffLoader.cellMolten ? 144 : 0;
+        return this.orePrefixes == OrePrefixes.capsule || this.orePrefixes == OrePrefixes.cell || this.orePrefixes == OrePrefixes.cellPlasma ? 1000 : this.orePrefixes == WerkstoffLoader.cellMolten || this.orePrefixes == WerkstoffLoader.capsuleMolten ? 144 : 0;
+    }
+
+    @Override
+    public ItemStack getContainerItem(ItemStack aStack) {
+        return this.orePrefixes == OrePrefixes.cell ||this.orePrefixes == OrePrefixes.cellPlasma || this.orePrefixes == WerkstoffLoader.cellMolten ? Materials.Empty.getCells(1) : null;
     }
 }
