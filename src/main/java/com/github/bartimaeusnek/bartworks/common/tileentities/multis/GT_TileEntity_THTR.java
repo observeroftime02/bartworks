@@ -146,38 +146,24 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         if (!(this.HeliumSupply >= GT_TileEntity_THTR.HELIUM_NEEDED && this.BISOPeletSupply + this.TRISOPeletSupply >= 100000))
             return false;
 
-        if (cyclescompleted >= 107) {
-            Logger.info("108 Cycles have elapsed, now we reduce the fuel pellets by either 0.5% or 1, depending on RNG  ...");
-            Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+
+        if (cyclescompleted == 107) {
             if (new XSTR().nextBoolean()) {
-                Logger.info("Triggered % reduction, we will now first reduce BISO pellets by 0.5%, and if none are found, reduce TRISO Pellets instead");
                 if (this.BISOPeletSupply > 0) {
-                    if (this.BISOPeletSupply < 1000){
-                        Logger.info("BISO Pellet supply below reduction threshold, setting BISO pellet supply to zero...");
-                        this.BISOPeletSupply = 0;
-                    } else {
-                        reduceBISO = (this.BISOPeletSupply / 1000) * 5;
-                        this.BISOPeletSupply -= reduceBISO;
-                        Logger.info("Reduced BISO Pellet Supply by " + reduceBISO + " pellets");
-                    }
+                    BISOreduction();
                 } else {
-                    reduceTRISO = (this.TRISOPeletSupply / 1000) * 5;
-                    this.TRISOPeletSupply -= reduceTRISO;
-                    Logger.info("No BISO pellets found, reduced TRISO Pellet Supply by " + reduceTRISO + " pellets instead");
+                    TRISOreduction();
                 }
-            }
-            else {
-                Logger.info("Did not trigger % reduction, reducing pellet supply by one instead...");
+            } else {
                 if (this.TRISOPeletSupply > 0) {
                     --this.TRISOPeletSupply;
-                    Logger.info("BISO pellet found, reducing BISO pellet count by one...");
+                    cyclescompleted = 0;
                 } else {
                     --this.BISOPeletSupply;
-                    Logger.info(" No BISO pellets found, reducing TRISO cound by one pellet instead...");
+                    cyclescompleted = 0;
+
                 }
             }
-            Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
-            cyclescompleted = 0;
         }
 
         this.updateSlots();
@@ -191,6 +177,36 @@ public class GT_TileEntity_THTR extends GT_MetaTileEntity_MultiBlockBase {
         Logger.info("Starting cycle number " + cyclescompleted + "...");
 
         return true;
+    }
+
+    private void BISOreduction(){
+        if (new XSTR().nextBoolean()){
+        Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+        reduceBISO = (this.BISOPeletSupply / 1000) * 5;
+        this.BISOPeletSupply -= reduceBISO;
+        Logger.info("Reduced BISO Pellet Supply by " + reduceBISO + " pellets");
+        Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
+        cyclescompleted = 0;
+            } else {
+            BISOPeletSupply--;
+            Logger.info("Hit RNG toss, reduced by one pellet only");
+            cyclescompleted = 0;
+        }
+    }
+
+    private void TRISOreduction(){
+        if (new XSTR().nextBoolean()) {
+            Logger.info("To start with, THTR contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets...");
+            reduceTRISO = (this.TRISOPeletSupply / 1000) * 5;
+            this.TRISOPeletSupply -= reduceTRISO;
+            Logger.info("No BISO pellets found, reduced TRISO Pellet Supply by " + reduceTRISO + " pellets instead");
+            Logger.info("Fuel calculations done. THTR now contains " + this.BISOPeletSupply + " BISO Pellets and " + this.TRISOPeletSupply + " TRISO Pellets");
+            cyclescompleted = 0;
+        } else {
+            TRISOPeletSupply--;
+            Logger.info("Hit RNG toss, reduced by one pellet only");
+            cyclescompleted = 0;
+        }
     }
 
     @Override
